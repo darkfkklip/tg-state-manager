@@ -32,12 +32,12 @@ func (s *RedisStorage[S]) formatKey(id int64) string {
 // Get retrieves a user state from Redis.
 func (s *RedisStorage[S]) Get(id int64) (UserState[S], bool, error) {
 	data, err := s.client.Get(s.ctx, s.formatKey(id)).Bytes()
-	
+
 	// Handle non-existent key
 	if err == redis.Nil {
 		return UserState[S]{}, false, nil
 	}
-	
+
 	// Handle other Redis errors
 	if err != nil {
 		return UserState[S]{}, false, err
@@ -48,7 +48,7 @@ func (s *RedisStorage[S]) Get(id int64) (UserState[S], bool, error) {
 	if err := json.Unmarshal(data, &state); err != nil {
 		return UserState[S]{}, false, err
 	}
-	
+
 	return state, true, nil
 }
 
@@ -58,6 +58,6 @@ func (s *RedisStorage[S]) Set(id int64, state UserState[S]) error {
 	if err != nil {
 		return err
 	}
-	
+
 	return s.client.Set(s.ctx, s.formatKey(id), data, 0).Err()
 }

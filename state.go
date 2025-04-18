@@ -1,8 +1,6 @@
 package tgstatemanager
 
-import (
-	"errors"
-)
+import "errors"
 
 // ValidationError indicates a validation failure, keeping the current state.
 var ValidationError = errors.New("validation error")
@@ -19,9 +17,10 @@ type State[S, U any] struct {
 
 // StateManager manages states for Telegram bots.
 type StateManager[S, U any] struct {
-	states  map[string]*State[S, U]
-	storage StateStorage[S]
-	keyFunc func(update U) int64
+	states       map[string]*State[S, U]
+	storage      StateStorage[S]
+	keyFunc      func(update U) int64
+	initialState string
 }
 
 // NewStateManager creates a new StateManager.
@@ -40,6 +39,11 @@ func (m *StateManager[S, U]) Append(states ...*State[S, U]) {
 	}
 }
 
+// SetInitialState sets the initial state for new users.
+func (m *StateManager[S, U]) SetInitialState(name string) {
+	m.initialState = name
+}
+
 // Handle processes an update, managing state transitions.
 func (m *StateManager[S, U]) Handle(update U) (bool, error) {
 	key := m.keyFunc(update)
@@ -49,20 +53,17 @@ func (m *StateManager[S, U]) Handle(update U) (bool, error) {
 	}
 
 	if !exists {
-		return false, nil // No state, ignore
+		userState.CurrentState = m.initialState
 	}
 
-	state, stateExists := m.states[userState.CurrentState]
-	if !stateExists {
+	state, ok := m.states[userState.CurrentState]
+	if !ok {
 		return false, nil // Invalid state, ignore
 	}
 
 	// Send prompt if needed
 	if state.Prompt != nil && !userState.PromptSent {
-		if err := m.sendPrompt(update, &userState, state, key); err != nil {
-			return false, err
-		}
-		return true, nil
+		return true, m.sendPrompt(update, &userState, state, key)
 	}
 
 	// Handle the update
@@ -85,19 +86,16 @@ func (m *StateManager[S, U]) Handle(update U) (bool, error) {
 		return false, err
 	}
 
-	if nextState == "" {
+	// End of flow or no state transition
+	if nextState == "" || nextState == NopState {
 		return true, nil // End of flow
 	}
 
 	// Handle transition to next state
-	if nextState != NopState {
-		if nextState, exists := m.states[nextState]; exists && nextState.Prompt != nil {
-			if err := m.sendPrompt(update, &userState, nextState, key); err != nil {
-				return false, err
-			}
-			return true, nil
-		}
+	if next, exists := m.states[nextState]; exists && next.Prompt != nil {
+		return true, m.sendPrompt(update, &userState, next, key)
 	}
+
 	return true, nil
 }
 

@@ -1,9 +1,18 @@
 package tgstatemanager
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
-// ValidationError indicates a validation failure, keeping the current state.
-var ValidationError = errors.New("validation error")
+var (
+	// ErrValidation indicates a validation failure, keeping the current state.
+	ErrValidation = errors.New("validation error")
+	// ErrDuplicateState is returned when attempting to add a state with a name that already exists.
+	ErrDuplicateState = errors.New("duplicate state name")
+	// ErrEmptyStateName is returned when attempting to add a state with an empty name.
+	ErrEmptyStateName = errors.New("empty state name")
+)
 
 // NopState is a special state name indicating no state transition should occur.
 const NopState = "<nop>"
@@ -32,11 +41,20 @@ func NewStateManager[S, U any](storage StateStorage[S], keyFunc func(update U) i
 	}
 }
 
-// Append adds states to the manager.
-func (m *StateManager[S, U]) Append(states ...*State[S, U]) {
+// Add adds states to the manager and returns an error if any duplicate state names are found.
+// It returns an error if any duplicate state names are found or if any state names are empty.
+func (m *StateManager[S, U]) Add(states ...*State[S, U]) error {
 	for _, state := range states {
+		if state.Name == "" {
+			return ErrEmptyStateName
+		}
+		if _, exists := m.states[state.Name]; exists {
+			return fmt.Errorf("%w: %s", ErrDuplicateState, state.Name)
+		}
 		m.states[state.Name] = state
 	}
+
+	return nil
 }
 
 // SetInitialState sets the initial state for new users.
@@ -73,7 +91,7 @@ func (m *StateManager[S, U]) Handle(update U) (bool, error) {
 
 	nextState, err := state.Handle(update, &userState.Data)
 	if err != nil {
-		if errors.Is(err, ValidationError) {
+		if errors.Is(err, ErrValidation) {
 			return true, nil // Stay in current state
 		}
 		return false, err

@@ -94,7 +94,7 @@ func main() {
 	})
 
 	sm.SetInitialState("ask_name")
-	sm.Append(
+	err = sm.Add(
 		&tgsm.State[UserData, tele.Update]{
 			Name: "ask_name",
 			Prompt: func(u tele.Update, data *UserData) error {
@@ -103,7 +103,7 @@ func main() {
 			},
 			Handle: func(u tele.Update, data *UserData) (string, error) {
 				if u.Message.Text == "" {
-					return "", tgsm.ValidationError
+					return "", tgsm.ErrValidation
 				}
 				data.Name = u.Message.Text
 				return "ask_age", nil
@@ -118,7 +118,7 @@ func main() {
 			Handle: func(u tele.Update, data *UserData) (string, error) {
 				age, err := strconv.Atoi(u.Message.Text)
 				if err != nil || age < 0 {
-					return "", tgsm.ValidationError
+					return "", tgsm.ErrValidation
 				}
 				data.Age = age
 				_, err = bot.Send(u.Message.Chat, "All set!")
@@ -126,6 +126,9 @@ func main() {
 			},
 		},
 	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// State management middleware
 	bot.Use(func(next tele.HandlerFunc) tele.HandlerFunc {
@@ -276,7 +279,7 @@ func main() {
 
 	sm.SetInitialState("ask_name")
 
-	sm.Append(&tgsm.State[UserData, tele.Update]{
+	err = sm.Add(&tgsm.State[UserData, tele.Update]{
 		Name: "ask_name",
 		Prompt: func(u tele.Update, data *UserData) error {
 			_, err := bot.Send(u.Message.Chat, "What's your name?")
@@ -288,6 +291,9 @@ func main() {
 			return "", err
 		},
 	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	bot.Handle(tele.OnText, func(c tele.Context) error {
 		_, err := sm.Handle(c.Update())
@@ -330,7 +336,7 @@ func main() {
 
 	sm.SetInitialState("ask_name")
 
-	sm.Append(&tgsm.State[UserData, telego.Update]{
+	err = sm.Add(&tgsm.State[UserData, telego.Update]{
 		Name: "ask_name",
 		Prompt: func(u telego.Update, data *UserData) error {
 			_, err := bot.SendMessage(ctx, &telego.SendMessageParams{
@@ -348,6 +354,9 @@ func main() {
 			return "", err
 		},
 	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	updates, _ := bot.UpdatesViaLongPolling(ctx, nil)
 	for update := range updates {
@@ -389,7 +398,7 @@ func main() {
 
 	sm.SetInitialState("ask_name")
 
-	sm.Append(&tgsm.State[UserData, tgbotapi.Update]{
+	err = sm.Add(&tgsm.State[UserData, tgbotapi.Update]{
 		Name: "ask_name",
 		Prompt: func(u tgbotapi.Update, data *UserData) error {
 			msg := tgbotapi.NewMessage(u.Message.Chat.ID, "What's your name?")
@@ -403,6 +412,9 @@ func main() {
 			return "", err
 		},
 	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60

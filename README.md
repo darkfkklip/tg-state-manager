@@ -19,12 +19,15 @@ Telegram State Manager (`tg-state-manager`) is a lightweight, type-safe state ma
   - [Setting Up the State Manager](#setting-up-the-state-manager)
   - [Handling Updates](#handling-updates)
   - [Starting a Conversation](#starting-a-conversation)
+  - [Adding States](#adding-states)
+  - [Best Practices](#best-practices)
 - [Examples](#examples)
   - [Basic Examples](#basic-examples)
   	- [Telebot](#telebot)
   	- [Telego](#telego)
   	- [Telegram Bot API](#telegram-bot-api)
   - [Advanced Examples](#advanced-examples)
+	- [Creating Reusable State Patterns](#creating-reusable-state-patterns)
 - [API Reference](#api-reference)
 - [Contributing](#contributing)
 - [License](#license)
@@ -211,7 +214,6 @@ Initialize with storage and a key function:
 sm := tgsm.NewStateManager[UserData, UpdateType](storage, func(u UpdateType) int64 {
 	return u.ChatID // Extract chat/user ID
 })
-sm.Append(state1, state2)
 ```
 
 ### Handling Updates
@@ -239,6 +241,27 @@ Set an initial state:
 ```go
 sm.SetInitialState("first_state")
 ```
+
+### Adding States
+
+Add states with validation to prevent duplicates:
+
+```go
+err := sm.Add(state1, state2, state3)
+if err != nil {
+   log.Fatalf("Error adding states: %v", err)
+}
+```
+
+**Note**: The `Add` function returns an error if duplicate state names are detected to prevent accidental overwrites. This ensures state integrity by allowing developers to handle duplicates explicitly (e.g., logging or skipping them) rather than silently overwriting existing states, which could lead to bugs.
+
+### Best Practices
+
+1. **Group Related States**: Keep states for a specific flow together.
+2. **Use Descriptive Names**: Name states clearly to understand their purpose.
+3. **Handle Edge Cases**: Consider what happens when users send unexpected inputs.
+4. **Provide Clear Feedback**: Always inform users about validation errors.
+5. **End States**: Use empty string or `tgsm.NopState` to indicate the end of a conversation flow.
 
 ## Examples
 
@@ -430,21 +453,74 @@ func main() {
 ```
 
 ### Advanced Examples
+
+#### Creating Reusable State Patterns
+
+For complex bots, consider creating helper functions that generate states with common patterns: For example, In `telebot` we can do this:
+
+```go
+// Helper function to create states with standard validation
+func createState(
+    bot *tele.Bot,
+    name string,
+    promptMsg string,
+    validator func(string) (bool, error),
+    errorMsg string,
+    nextState string,
+    updateState func(string, *UserData),
+) *tgsm.State[UserData, tele.Update] {
+    return &tgsm.State[UserData, tele.Update]{
+        Name: name,
+        Prompt: func(u tele.Update, state *UserData) error {
+            _, err := bot.Send(u.Message.Chat, promptMsg)
+            return err
+        },
+        Handle: func(u tele.Update, state *UserData) (string, error) {
+            text := u.Message.Text
+            if valid, _ := validator(text); !valid {
+                _, err := bot.Send(u.Message.Chat, errorMsg)
+                if err != nil {
+                    return "", err
+                }
+                return "", tgsm.ErrValidation
+            }
+            updateState(text, state)
+            return nextState, nil
+        },
+    }
+}
+
+// Using the helper to create a specific state
+nameState := createState(
+    bot,
+    "ask_name",
+    "What's your name?",
+    func(text string) (bool, error) {
+        return len(text) >= 2 && len(text) <= 50, nil
+    },
+    "Please enter a valid name (2-50 characters).",
+    "ask_age",
+    func(text string, data *UserData) {
+        data.Name = text
+    },
+)
+```
+
 For more advanced examples, refer to the [examples](examples) directory.
 
 ## API Reference
 
-| Name                                      | Description                              |
-|-------------------------------------------|------------------------------------------|
-| `StateManager[S, U any]`                  | Manages states and transitions.          |
-| `NewStateManager(storage, keyFunc)`       | Creates a new state manager.             |
-| `Append(states ...*State[S, U])`          | Adds states to the manager.              |
-| `Handle(update U) (bool, error)`          | Processes an update.                     |
-| `State[S, U any]`                         | Defines a state with `Prompt`/`Handle`.  |
-| `UserState[S any]`                        | Holds current state and data.            |
-| `StateStorage[S any]`                     | Storage interface (`Get`, `Set`).        |
-| `NewInMemoryStorage[S any]()`             | Creates in-memory storage.               |
-| `NewRedisStorage[S any](client, prefix)`  | Creates Redis storage.                   |
+| Name | Description |
+| --- | --- |
+| `StateManager[S, U any]` | Manages states and transitions. |
+| `NewStateManager(storage, keyFunc)` | Creates a new state manager. |
+| `Add(states ...*State[S, U]) error` | Adds states to the manager with duplicate checking. |
+| `Handle(update U) (bool, error)` | Processes an update. |
+| `State[S, U any]` | Defines a state with `Prompt`/`Handle`. |
+| `UserState[S any]` | Holds current state and data. |
+| `StateStorage[S any]` | Storage interface (`Get`, `Set`). |
+| `NewInMemoryStorage[S any]()` | Creates in-memory storage. |
+| `NewRedisStorage[S any](client, prefix)` | Creates Redis storage. |
 
 ## Contributing
 

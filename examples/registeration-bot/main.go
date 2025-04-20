@@ -22,23 +22,23 @@ type UserData struct {
 
 func main() {
 	// Initialize bot and Redis client
-	bot, storage := setupServices()
+	bot, stateStorage := initializeServices()
 
 	// Initialize state manager
-	stateManager := setupStateManager(storage)
+	stateManager := initializeStateManager(stateStorage)
 
 	// Register states
 	registerStates(stateManager, bot)
 
 	// Register handlers
-	registerHandlers(bot, storage, stateManager)
+	registerHandlers(bot, stateStorage, stateManager)
 
-	fmt.Println("Starting bot...")
+	fmt.Println("Bot started successfully.")
 	bot.Start()
 }
 
-// setupServices initializes and returns the bot and storage
-func setupServices() (*tele.Bot, tgsm.StateStorage[UserData]) {
+// initializeServices initializes and returns the bot and storage
+func initializeServices() (*tele.Bot, tgsm.StateStorage[UserData]) {
 	// Initialize Redis client
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
@@ -51,81 +51,85 @@ func setupServices() (*tele.Bot, tgsm.StateStorage[UserData]) {
 		Verbose: true,
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to initialize bot: %v", err)
 	}
 
-	// Initialize storage
-	storage := tgsm.NewRedisStorage[UserData](redisClient, "user")
-	return bot, storage
+	return bot, tgsm.NewRedisStorage[UserData](redisClient, "user")
 }
 
-// setupStateManager creates and returns the state manager
-func setupStateManager(storage tgsm.StateStorage[UserData]) *tgsm.StateManager[UserData, tele.Update] {
+// initializeStateManager creates and returns the state manager
+func initializeStateManager(storage tgsm.StateStorage[UserData]) *tgsm.StateManager[UserData, tele.Update] {
 	return tgsm.NewStateManager(storage, func(u tele.Update) int64 {
 		return u.Message.Chat.ID
 	})
 }
 
 // registerStates adds all states to the state manager
-func registerStates(m *tgsm.StateManager[UserData, tele.Update], bot *tele.Bot) {
-	m.Append(
+func registerStates(stateManager *tgsm.StateManager[UserData, tele.Update], bot *tele.Bot) {
+	if err := stateManager.Add(
 		NewFirstNameState(bot),
 		NewLastNameState(bot),
 		NewSkillsState(bot),
 		NewAgeState(bot),
 		NewCooperateTypeState(bot),
-	)
+	); err != nil {
+		log.Fatalf("Failed to register states: %v", err)
+	}
+	stateManager.SetInitialState("first_name")
 }
 
 // registerHandlers sets up all bot command handlers
-func registerHandlers(bot *tele.Bot, storage tgsm.StateStorage[UserData], m *tgsm.StateManager[UserData, tele.Update]) {
+func registerHandlers(bot *tele.Bot, stateStorage tgsm.StateStorage[UserData], stateManager *tgsm.StateManager[UserData, tele.Update]) {
 	// Middleware for state handling
-	bot.Use(createStateMiddleware(m))
+	bot.Use(createStateMiddleware(stateManager))
 
 	// Command handlers
-	bot.Handle("/start", handleStart(storage))
-	bot.Handle("/profile", handleProfile(storage))
-	bot.Handle(tele.OnText, handleDefaultText())
+	bot.Handle("/start", createStartHandler(stateStorage))
+	bot.Handle("/profile", createProfileHandler(stateStorage))
+	bot.Handle(tele.OnText, createDefaultHandler())
 }
 
 // createStateMiddleware returns middleware for state handling
-func createStateMiddleware(m *tgsm.StateManager[UserData, tele.Update]) tele.MiddlewareFunc {
+func createStateMiddleware(stateManager *tgsm.StateManager[UserData, tele.Update]) tele.MiddlewareFunc {
 	return func(next tele.HandlerFunc) tele.HandlerFunc {
 		return func(c tele.Context) error {
-			handled, err := m.Handle(c.Update())
+			handled, err := stateManager.Handle(c.Update())
 			if err != nil {
-				return err
+				return fmt.Errorf("state handling error: %w", err)
 			}
-			if !handled {
-				return next(c)
+			if handled {
+				return nil
 			}
-			return nil
+			return next(c)
 		}
 	}
 }
 
-// handleStart returns a handler for the /start command
-func handleStart(storage tgsm.StateStorage[UserData]) tele.HandlerFunc {
+func createStartHandler(stateStorage tgsm.StateStorage[UserData]) tele.HandlerFunc {
 	return func(c tele.Context) error {
-		userState, exists, err := storage.Get(c.Message().Chat.ID)
-		if err != nil || !exists || userState.Data.FirstName == "" {
-			newState := tgsm.UserState[UserData]{CurrentState: "first_name"}
-			return storage.Set(c.Message().Chat.ID, newState)
-		}
-		return c.Send("Welcome! Let's get started.")
-	}
-}
-
-// handleProfile returns a handler for the /profile command
-func handleProfile(storage tgsm.StateStorage[UserData]) tele.HandlerFunc {
-	return func(c tele.Context) error {
-		userState, ok, err := storage.Get(c.Message().Chat.ID)
+		userState, exists, err := stateStorage.Get(c.Message().Chat.ID)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get user state: %w", err)
 		}
-		if !ok || userState.Data.FirstName == "" {
+		
+		if !exists || userState.Data.FirstName == "" {
+			return stateStorage.Set(c.Message().Chat.ID, tgsm.UserState[UserData]{CurrentState: "first_name"})
+		}
+		return c.Send("Welcome back! Your registration is already complete.")
+	}
+}
+
+// createProfileHandler returns a handler for the /profile command
+func createProfileHandler(stateStorage tgsm.StateStorage[UserData]) tele.HandlerFunc {
+	return func(c tele.Context) error {
+		userState, exists, err := stateStorage.Get(c.Message().Chat.ID)
+		if err != nil {
+			return fmt.Errorf("failed to get user state: %w", err)
+		}
+		if !exists || userState.Data.FirstName == "" {
 			return c.Send("No profile data. Use /start to register.")
 		}
+
 		return c.Send(fmt.Sprintf(
 			"Profile:\nName: %s %s\nSkills: %s\nAge: %d\nCooperate Type: %s",
 			userState.Data.FirstName,
@@ -137,8 +141,8 @@ func handleProfile(storage tgsm.StateStorage[UserData]) tele.HandlerFunc {
 	}
 }
 
-// handleDefaultText returns a handler for text messages
-func handleDefaultText() tele.HandlerFunc {
+// createDefaultHandler returns a handler for text messages
+func createDefaultHandler() tele.HandlerFunc {
 	return func(c tele.Context) error {
 		return c.Send("Please use commands /start, /profile.")
 	}

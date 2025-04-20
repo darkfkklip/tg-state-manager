@@ -31,7 +31,7 @@ func createState(
 				if err != nil {
 					return "", err
 				}
-				return "", tgsm.ValidationError
+				return "", tgsm.ErrValidation
 			}
 			updateState(text, state)
 			return nextState, nil
@@ -130,7 +130,7 @@ func NewCooperateTypeState(bot *tele.Bot) *tgsm.State[UserData, tele.Update] {
 				if err != nil {
 					return "", err
 				}
-				return "", tgsm.ValidationError
+				return "", tgsm.ErrValidation
 			}
 			state.CooperateType = u.Message.Text
 			_, err := bot.Send(u.Message.Chat, "Registration completed successfully! Use /profile to view your information.")

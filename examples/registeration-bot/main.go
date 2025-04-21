@@ -111,7 +111,7 @@ func createStartHandler(stateStorage tgsm.StateStorage[UserData]) tele.HandlerFu
 		if err != nil {
 			return fmt.Errorf("failed to get user state: %w", err)
 		}
-		
+
 		if !exists || userState.Data.FirstName == "" {
 			return stateStorage.Set(c.Message().Chat.ID, tgsm.UserState[UserData]{CurrentState: "first_name"})
 		}

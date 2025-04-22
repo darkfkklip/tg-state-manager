@@ -1,5 +1,7 @@
+version: 2
+
 before:
-  install:
+  hooks:
     - go mod tidy
 builds:
   - main: .

